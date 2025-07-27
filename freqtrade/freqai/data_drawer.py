@@ -8,6 +8,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, Tuple, TypedDict
 
+import h2o
+
 import numpy as np
 import pandas as pd
 import psutil
@@ -482,6 +484,12 @@ class FreqaiDataDrawer:
             model.save(save_path / f"{dk.model_filename}_model.h5")
         elif self.model_type in ["stable_baselines3", "sb3_contrib", "pytorch"]:
             model.save(save_path / f"{dk.model_filename}_model.zip")
+        elif self.model_type == 'h2o': 
+            model.save_mojo(path=f"{dk.data_path}", filename=f"{dk.model_filename}_model.zip")
+        elif self.model_type == 'h2o_multi':
+            for label in dk.label_list:
+                clean_label = re.sub(r'\W+', '', label)
+                model[label].save_mojo(path=f"{dk.data_path}", filename=f"{dk.model_filename}_{clean_label}_model.zip")
 
         dk.data["data_path"] = str(dk.data_path)
         dk.data["model_filename"] = str(dk.model_filename)
@@ -576,6 +584,13 @@ class FreqaiDataDrawer:
             zip = torch.load(dk.data_path / f"{dk.model_filename}_model.zip")
             model = zip["pytrainer"]
             model = model.load_from_checkpoint(zip)
+        elif self.model_type == 'h2o':
+            model = h2o.import_mojo(mojo_path=f"{dk.data_path}/{dk.model_filename}_model.zip")
+        elif self.model_type == 'h2o_multi':
+            model = {}
+            for label in dk.label_list:
+                clean_label = re.sub(r'\W+', '', label)
+                model[label] = h2o.import_mojo(mojo_path=f"{dk.data_path}/{dk.model_filename}_{clean_label}_model.zip")
 
         if not model:
             raise OperationalException(
