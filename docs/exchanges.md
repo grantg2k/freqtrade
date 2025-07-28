@@ -407,6 +407,24 @@ If your account is required to use an operatorId, you can set it in the configur
 
 Bitvavo expects the `operatorId` to be an integer.
 
+## Alpaca
+
+Alpaca supports both live and paper trading. Use the `paper` flag in the
+exchange configuration to select the correct domain.
+
+```json
+"exchange": {
+    "name": "alpaca",
+    "key": "your_api_key_id",
+    "secret": "your_secret_key",
+    "paper": true
+}
+```
+
+When `paper` is enabled, Freqtrade connects to `https://paper-api.alpaca.markets`.
+For live trading set `paper` to `false` and the bot will use
+`https://api.alpaca.markets`.
+
 ## All exchanges
 
 Should you experience constant errors with Nonce (like `InvalidNonce`), it is best to regenerate the API keys. Resetting Nonce is difficult and it's usually easier to regenerate the API keys.

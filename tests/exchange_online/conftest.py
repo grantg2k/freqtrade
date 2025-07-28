@@ -501,6 +501,13 @@ EXCHANGES = {
         # TODO: re-enable hyperliquid websocket tests
         "skip_ws_tests": True,
     },
+    "alpaca": {
+        "pair": "BTC/USD",
+        "stake_currency": "USD",
+        "hasQuoteVolume": True,
+        "timeframe": "1h",
+        "candle_count": 1000,
+    },
 }
 
 

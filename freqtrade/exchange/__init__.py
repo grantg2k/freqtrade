@@ -4,6 +4,7 @@ from freqtrade.exchange.common import MAP_EXCHANGE_CHILDCLASS
 from freqtrade.exchange.exchange import Exchange
 
 # isort: on
+from freqtrade.exchange.alpaca import Alpaca
 from freqtrade.exchange.binance import Binance
 from freqtrade.exchange.bingx import Bingx
 from freqtrade.exchange.bitmart import Bitmart
