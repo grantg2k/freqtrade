@@ -63,6 +63,7 @@ SUPPORTED_EXCHANGES = [
     "htx",
     "hyperliquid",
     "kraken",
+    "kinesis",
     "okx",
 ]
 
