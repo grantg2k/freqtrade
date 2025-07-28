@@ -9,6 +9,7 @@ from freqtrade.exchange.bingx import Bingx
 from freqtrade.exchange.bitmart import Bitmart
 from freqtrade.exchange.bitpanda import Bitpanda
 from freqtrade.exchange.bitvavo import Bitvavo
+from freqtrade.exchange.btcc import Btcc
 from freqtrade.exchange.bybit import Bybit
 from freqtrade.exchange.cryptocom import Cryptocom
 from freqtrade.exchange.exchange_utils import (
