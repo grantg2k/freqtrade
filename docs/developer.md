@@ -307,6 +307,11 @@ Most exchanges supported by CCXT should work out of the box.
 If you need to implement a specific exchange class, these are found in the `freqtrade/exchange` source folder. You'll also need to add the import to `freqtrade/exchange/__init__.py` to make the loading logic aware of the new exchange.  
 We recommend looking at existing exchange implementations to get an idea of what might be required.
 
+!!! Note "Alpaca"
+    Alpaca distinguishes between live and paper trading via different API domains.
+    Set `"paper": true` in the exchange configuration to use the paper endpoint
+    `https://paper-api.alpaca.markets`.
+
 !!! Warning
     Implementing and testing an exchange can be a lot of trial and error, so please bear this in mind.
     You should also have some development experience, as this is not a beginner task.
