@@ -66,6 +66,7 @@ Exchanges confirmed working by the community:
 
 - [X] [Bitvavo](https://bitvavo.com/)
 - [X] [Kucoin](https://www.kucoin.com/)
+- [X] Kinesis Money
 
 ## Community showcase
 

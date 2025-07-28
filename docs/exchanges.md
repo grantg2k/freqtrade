@@ -407,6 +407,24 @@ If your account is required to use an operatorId, you can set it in the configur
 
 Bitvavo expects the `operatorId` to be an integer.
 
+## Kinesis
+
+Freqtrade can interact with the [Kinesis Money](https://kinesis.money/) exchange through
+the public REST API. Configuration requires the API `key`, `secret` and optional
+`base_url`:
+
+```json
+"exchange": {
+    "name": "kinesis",
+    "key": "your_api_key",
+    "secret": "your_api_secret",
+    "base_url": "https://client-api.kinesis.money"
+}
+```
+
+The implementation is minimal and may not support all features provided by the
+official platform.
+
 ## All exchanges
 
 Should you experience constant errors with Nonce (like `InvalidNonce`), it is best to regenerate the API keys. Resetting Nonce is difficult and it's usually easier to regenerate the API keys.
