@@ -3,6 +3,8 @@ import hmac
 import json
 import logging
 import time
+from collections.abc import Iterable
+from datetime import datetime
 from typing import Any
 
 import requests
@@ -46,14 +48,34 @@ class Kinesis(Exchange):
         response.raise_for_status()
         return response.json()
 
+    def fetch_markets(self) -> list[dict[str, Any]]:
+        """Return available trading pairs."""
+        return self._request("GET", "/v1/exchange/currency-pairs")
+
     def fetch_balance(self):
         return self._request("GET", "/v1/exchange/holdings")
 
     def fetch_ticker(self, pair: str):
         return self._request("GET", f"/v1/exchange/mid-price/{pair}")
 
-    def fetch_ohlcv(self, pair: str, timeframe: str, since=None, limit=None):
-        return self._request("GET", f"/v1/exchange/ohlc/{pair}")
+    def fetch_tickers(self, pairs: Iterable[str] | None = None) -> Any:
+        """Fetch tickers for one or more pairs."""
+        if pairs:
+            pair_str = ",".join(pairs)
+            return self._request("GET", f"/v1/exchange/mid-price/{pair_str}")
+        return self._request("GET", "/v1/exchange/mid-price")
+
+    def fetch_ohlcv(
+        self, pair: str, timeframe: str = "1m", since: int | None = None, limit: int | None = None
+    ) -> Any:
+        """Get historical candles for a pair."""
+        query: list[str] = [f"timeframe={timeframe}"]
+        if since is not None:
+            query.append(f"since={since}")
+        if limit is not None:
+            query.append(f"limit={limit}")
+        qstr = "?" + "&".join(query) if query else ""
+        return self._request("GET", f"/v1/exchange/ohlc/{pair}{qstr}")
 
     def create_order(
         self,
@@ -88,3 +110,31 @@ class Kinesis(Exchange):
 
     def fetch_open_orders(self):
         return self._request("GET", "/v1/exchange/orders/open")
+
+    def fetch_order(
+        self, order_id: str, pair: str, params: dict[Any, Any] | None = None
+    ) -> dict[str, Any]:
+        """Return the status of a specific order."""
+        return self._request("GET", f"/v1/exchange/orders/{order_id}")
+
+    def fetch_orders(
+        self, pair: str, since: datetime, params: dict[Any, Any] | None = None
+    ) -> list[dict[str, Any]]:
+        query = f"?since={int(since.timestamp() * 1000)}" if since else ""
+        return self._request("GET", f"/v1/exchange/orders/history/{pair}{query}")
+
+    def fetch_closed_orders(
+        self, pair: str, since: datetime, params: dict[Any, Any] | None = None
+    ) -> list[dict[str, Any]]:
+        query = f"?since={int(since.timestamp() * 1000)}" if since else ""
+        return self._request("GET", f"/v1/exchange/orders/closed/{pair}{query}")
+
+    def fetch_trades(self, pair: str, since: int | None = None, limit: int | None = None) -> Any:
+        """Retrieve recent trades."""
+        query: list[str] = []
+        if since is not None:
+            query.append(f"since={since}")
+        if limit is not None:
+            query.append(f"limit={limit}")
+        qstr = "?" + "&".join(query) if query else ""
+        return self._request("GET", f"/v1/exchange/trades/{pair}{qstr}")
