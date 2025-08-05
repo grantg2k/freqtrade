@@ -422,8 +422,11 @@ the public REST API. Configuration requires the API `key`, `secret` and optional
 }
 ```
 
-The implementation is minimal and may not support all features provided by the
-official platform.
+The implementation supports market information, tickers, OHLCV data, trade
+history and order management through dedicated REST calls.  Because Kinesis is
+not supported by ccxt, these methods rely on custom endpoints and may still be
+incomplete. Further work might be required to achieve full feature parity with
+other exchanges.
 
 ## All exchanges
 
