@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
 import psutil
 from datasieve.pipeline import Pipeline
@@ -83,7 +82,7 @@ class FreqaiDataKitchen:
         self.backtest_live_models = config.get("freqai_backtest_live_models", False)
         self.feature_pipeline = Pipeline()
         self.label_pipeline = Pipeline()
-        self.DI_values: npt.NDArray = np.array([])
+        self.DI_values: np.ndarray = np.array([])  # Replace npt.NDArray with np.ndarray
 
         if not self.live:
             self.full_path = self.get_full_models_path(self.config)
@@ -140,13 +139,29 @@ class FreqaiDataKitchen:
         if "shuffle" not in self.freqai_config["data_split_parameters"]:
             self.freqai_config["data_split_parameters"].update({"shuffle": False})
 
-        weights: npt.ArrayLike
+        weights: np.ndarray  # Replace npt.ArrayLike with np.ndarray
         if feat_dict.get("weight_factor", 0) > 0:
             weights = self.set_weights_higher_recent(len(filtered_dataframe))
         else:
             weights = np.ones(len(filtered_dataframe))
 
         if self.freqai_config.get("data_split_parameters", {}).get("test_size", 0.1) != 0:
+            # prepare split parameters, support stratify from config
+            split_params = self.freqai_config["data_split_parameters"].copy()
+            stratify_param = split_params.pop("stratify", None)
+            if stratify_param is not None:
+                if stratify_param is True:
+                    # use labels array or single-column DataFrame
+                    stratify_labels = (
+                        labels
+                        if not isinstance(labels, pd.DataFrame)
+                        else (labels.iloc[:, 0] if labels.shape[1] == 1 else labels)
+                    )
+                elif isinstance(stratify_param, str):
+                    stratify_labels = labels[stratify_param]
+                else:
+                    stratify_labels = stratify_param
+                split_params["stratify"] = stratify_labels
             (
                 train_features,
                 test_features,
@@ -158,7 +173,7 @@ class FreqaiDataKitchen:
                 filtered_dataframe[: filtered_dataframe.shape[0]],
                 labels,
                 weights,
-                **self.config["freqai"]["data_split_parameters"],
+                **split_params,
             )
         else:
             test_labels = np.zeros(2)
@@ -282,8 +297,12 @@ class FreqaiDataKitchen:
             # we are backtesting so we need to preserve row number to send back to strategy,
             # so now we use do_predict to avoid any prediction based on a NaN
             drop_index = pd.isnull(filtered_df).any(axis=1)
+            column_index = pd.isnull(filtered_df).any(axis=0)
             self.data["filter_drop_index_prediction"] = drop_index
-            filtered_df.fillna(0, inplace=True)
+            # find columns that had NaNs and log them
+            columns_with_nans = filtered_df.columns[column_index].tolist()
+            nan_idxs = filtered_df.index[filtered_df.isna().any(axis=1)]
+            filtered_df = filtered_df.fillna(0)  # Replace NaN values with 0 in a writable DataFrame
             # replacing all NaNs with zeros to avoid issues in 'prediction', but any prediction
             # that was based on a single NaN is ultimately protected from buys with do_predict
             drop_index = ~drop_index
@@ -294,6 +313,16 @@ class FreqaiDataKitchen:
                     len(self.do_predict) - self.do_predict.sum(),
                     len(filtered_df),
                 )
+                if columns_with_nans:
+                    logger.info(f"{self.pair}: NaNs in columns {columns_with_nans}")
+                    # for each, log the first and last row where the NaN appears
+                    for col in columns_with_nans:
+                        logger.info(
+                            f"{self.pair}: NaN first row {nan_idxs.min()} of {len(filtered_df)}"
+                        )
+                        logger.info(
+                            f"{self.pair}: NaN last row {nan_idxs.max()} of {len(filtered_df)}"
+                        )
             labels = []
 
         return filtered_df, labels
@@ -412,7 +441,7 @@ class FreqaiDataKitchen:
         labels = [c for c in column_names if "&" in c]
         self.label_list = labels
 
-    def set_weights_higher_recent(self, num_weights: int) -> npt.ArrayLike:
+    def set_weights_higher_recent(self, num_weights: int) -> np.ndarray:  # Replace npt.ArrayLike
         """
         Set weights so that recent data is more heavily weighted during
         training than older data.
@@ -422,7 +451,10 @@ class FreqaiDataKitchen:
         return weights
 
     def get_predictions_to_append(
-        self, predictions: DataFrame, do_predict: npt.ArrayLike, dataframe_backtest: DataFrame
+        self,
+        predictions: DataFrame,
+        do_predict: np.ndarray,
+        dataframe_backtest: DataFrame,  # Replace npt.ArrayLike
     ) -> DataFrame:
         """
         Get backtest prediction from current backtest period
