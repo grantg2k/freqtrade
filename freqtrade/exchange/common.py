@@ -53,7 +53,11 @@ MAP_EXCHANGE_CHILDCLASS = {
     "huboi": "htx",
 }
 
+# Native adapters which intentionally do not exist in CCXT.
+NATIVE_EXCHANGES = ["alpaca"]
+
 SUPPORTED_EXCHANGES = [
+    "alpaca",
     "binance",
     "bingx",
     "bitmart",

@@ -24,6 +24,7 @@ from freqtrade.exchange.common import (
     EXCHANGE_HAS_OPTIONAL,
     EXCHANGE_HAS_REQUIRED,
     MAP_EXCHANGE_CHILDCLASS,
+    NATIVE_EXCHANGES,
     SUPPORTED_EXCHANGES,
 )
 from freqtrade.exchange.exchange_utils_timeframe import timeframe_to_minutes, timeframe_to_prev_date
@@ -35,7 +36,9 @@ CcxtModuleType = Any
 
 
 def is_exchange_known_ccxt(exchange_name: str, ccxt_module: CcxtModuleType | None = None) -> bool:
-    return exchange_name in ccxt_exchanges(ccxt_module)
+    return exchange_name in ccxt_exchanges(ccxt_module) or (
+        ccxt_module is None and exchange_name.lower() in NATIVE_EXCHANGES
+    )
 
 
 def ccxt_exchanges(ccxt_module: CcxtModuleType | None = None) -> list[str]:
@@ -50,7 +53,10 @@ def available_exchanges(ccxt_module: CcxtModuleType | None = None) -> list[str]:
     Return exchanges available to the bot, i.e. non-bad exchanges in the ccxt list
     """
     exchanges = ccxt_exchanges(ccxt_module)
-    return [x for x in exchanges if validate_exchange(x)[0]]
+    available = [x for x in exchanges if validate_exchange(x)[0]]
+    if ccxt_module is None:
+        available.extend(exchange for exchange in NATIVE_EXCHANGES if exchange not in available)
+    return available
 
 
 def validate_exchange(exchange: str) -> tuple[bool, str, ccxt.Exchange | None]:
@@ -58,6 +64,9 @@ def validate_exchange(exchange: str) -> tuple[bool, str, ccxt.Exchange | None]:
     returns: can_use, reason, exchange_object
         with Reason including both missing and missing_opt
     """
+    if exchange.lower() in NATIVE_EXCHANGES:
+        return True, "native Alpaca SDK adapter", None
+
     try:
         ex_mod = getattr(ccxt.pro, exchange.lower())()
     except AttributeError:
@@ -128,6 +137,8 @@ def list_available_exchanges(all_exchanges: bool) -> list[ValidExchangesType]:
     :return: List of tuples with exchangename, valid, reason.
     """
     exchanges = ccxt_exchanges() if all_exchanges else available_exchanges()
+    if all_exchanges:
+        exchanges.extend(exchange for exchange in NATIVE_EXCHANGES if exchange not in exchanges)
     from freqtrade.resolvers.exchange_resolver import ExchangeResolver
 
     subclassed = {e["name"].lower(): e for e in ExchangeResolver.search_all_objects({}, False)}

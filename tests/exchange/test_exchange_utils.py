@@ -41,6 +41,14 @@ def test_check_exchange(default_conf, caplog) -> None:
     )
     caplog.clear()
 
+    # Native SDK exchange (not provided by CCXT).
+    default_conf.get("exchange").update({"name": "alpaca"})
+    assert check_exchange(default_conf)
+    assert log_has_re(
+        r'Exchange "alpaca" is officially supported by the Freqtrade development team\.', caplog
+    )
+    caplog.clear()
+
     # Test an officially supported by Freqtrade team exchange
     default_conf.get("exchange").update({"name": "binance"})
     assert check_exchange(default_conf)

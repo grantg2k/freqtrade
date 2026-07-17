@@ -8,6 +8,8 @@ ta-lib==0.6.7
 technical==1.5.3
 
 ccxt==4.5.4
+# Official Alpaca SDK (Trading API + stock/crypto/options market data clients)
+alpaca-py==0.43.5
 cryptography==45.0.7
 aiohttp==3.12.15
 SQLAlchemy==2.0.43
